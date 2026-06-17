@@ -7,7 +7,9 @@ the week, and tells you at a glance whether you're on track, ahead, or overusing
 > Built for [Claude](https://claude.ai)'s weekly usage limits. Works for any weekly
 > percentage-based budget though.
 
-<!-- スクショは公開後にここへ: ![screenshot](docs/screenshot.png) -->
+<p align="center">
+  <img src="docs/screenshot.png" width="360" alt="ClaudePace screenshot">
+</p>
 
 ## ✨ Features
 
