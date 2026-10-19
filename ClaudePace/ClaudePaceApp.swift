@@ -50,7 +50,7 @@ final class PanelContentController: NSViewController {
     static let cornerRadius: CGFloat = 16
 
     override func loadView() {
-        // 純正のメニューバー項目は macOS 26 の Liquid Glass で描かれている。
+        // 純正のメニューバー項目は Liquid Glass で描かれている。
         // NSVisualEffectView は旧世代のすりガラスで、色は乗るが背後の輪郭を溶かして消すため、
         // どのマテリアルを選んでも純正の見た目には届かない。
         let glass = NSGlassEffectView()
@@ -134,11 +134,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.target = self
         }
-        // macOS 27+: メニューの代わりに自前パネルを出す公式の仕組み。
-        // アイコンの選択背景（純正メニューと同じカプセル）をシステムが描く
-        if #available(macOS 27.0, *) {
-            statusItem?.expandedInterfaceDelegate = self
-        }
+        // メニューの代わりに自前パネルを出す公式の仕組み（macOS 27）。
+        // 左クリックでの開閉と、アイコンの選択背景（純正メニューと同じカプセル）をシステムが担う
+        statusItem?.expandedInterfaceDelegate = self
         updateStatusTitle()
 
         setupPanel()
@@ -295,16 +293,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         button.title = ""
     }
 
-    /// 左クリック=開閉 / 右クリック=終了メニュー
+    /// 右クリック=終了メニュー（左クリックはシステムのセッション経由で開閉する）
     @objc func handleClick(_ sender: NSStatusBarButton) {
-        guard let event = NSApp.currentEvent else { return }
-        // macOS 27+ の左クリックはシステムのセッション（expandedInterfaceDelegate）で開閉する
-        if #available(macOS 27.0, *), event.type != .rightMouseUp { return }
-        if event.type == .rightMouseUp {
-            showQuitMenu()
-        } else {
-            togglePopover()
-        }
+        guard NSApp.currentEvent?.type == .rightMouseUp else { return }
+        showQuitMenu()
     }
 
     /// 右クリックの「終了」メニュー
@@ -313,25 +305,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(NSMenuItem(title: "終了",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: "q"))
-        // macOS 27+ はアイコンが別プロセスで描かれ、performClick ではメニューが出ない。
+        // アイコンは別プロセスで描かれるため、statusItem.menu + performClick ではメニューが出ない。
         // アイコンの直下に直接ポップアップする
-        if #available(macOS 27.0, *),
-           let button = statusItem?.button, let window = button.window {
-            let frame = window.convertToScreen(button.convert(button.bounds, to: nil))
-            menu.popUp(positioning: nil, at: NSPoint(x: frame.minX, y: frame.minY - 4), in: nil)
-            return
-        }
-        statusItem?.menu = menu
-        statusItem?.button?.performClick(nil)
-        statusItem?.menu = nil
-    }
-
-    func togglePopover() {
-        if isPanelShown && !isClosing {
-            closePopover()
-        } else {
-            showPopover()
-        }
+        guard let button = statusItem?.button, let window = button.window else { return }
+        let frame = window.convertToScreen(button.convert(button.bounds, to: nil))
+        menu.popUp(positioning: nil, at: NSPoint(x: frame.minX, y: frame.minY - 4), in: nil)
     }
 
     func showPopover() {
@@ -357,14 +335,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // アプリ自体はアクティブにしない：nonactivating パネルはキーにさえなれば
         // 数値入力欄にキーボードが届く。NSApp.activate すると前面アプリから
         // フォーカスを奪い、そのウィンドウの信号機ボタンがグレーになる（純正メニューは奪わない）。
-        // ハイライトも同じタイミングにする：クリック追跡の終了時に AppKit が
-        // ボタンの状態を戻すため、同期で立てても打ち消されてしまう。
-        DispatchQueue.main.async { [weak self] in
+        DispatchQueue.main.async {
             panel.makeKey()
-            // macOS 27+ はシステムが描くので不要（そもそも効かない）
-            if #unavailable(macOS 27.0) {
-                self?.statusItem?.button?.isHighlighted = true
-            }
         }
     }
 
@@ -372,11 +344,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard let panel, panel.isVisible, !isClosing else { return }
         isClosing = true
         lastClosedAt = Date()
-        statusItem?.button?.isHighlighted = false
         // 外クリック・⌘Tab 等で閉じたら、システム側のセッションも終わらせる（アイコンの背景が消える）
-        if #available(macOS 27.0, *) {
-            statusItem?.expandedInterfaceSession?.cancel()
-        }
+        statusItem?.expandedInterfaceSession?.cancel()
         stopOutsideClickMonitor()
         // 純正のメニューと同じく、閉じるときだけ余韻を残す
         NSAnimationContext.runAnimationGroup({ ctx in
@@ -449,7 +418,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 }
 
-@available(macOS 27.0, *)
 extension AppDelegate: NSStatusItemExpandedInterfaceDelegate {
     func statusItem(_ statusItem: NSStatusItem, didBegin expandedInterfaceSession: NSStatusItemExpandedInterfaceSession) {
         // macOS 27 ではアイコンが別プロセスで描かれ、開いている時のアイコンのクリックは

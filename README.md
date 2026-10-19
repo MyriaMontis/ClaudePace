@@ -8,7 +8,9 @@ the week, and tells you at a glance whether you're on track, ahead, or overusing
 > percentage-based budget though.
 
 <p align="center">
-  <img src="docs/screenshot.png" width="360" alt="ClaudePace screenshot">
+  <img src="docs/screenshot.png" width="340" alt="ClaudePace: plenty left">
+  &nbsp;
+  <img src="docs/screenshot-overusing.png" width="305" alt="ClaudePace: overusing, with catch-up hint">
 </p>
 
 ## ✨ Features
@@ -19,7 +21,14 @@ the week, and tells you at a glance whether you're on track, ahead, or overusing
 - **"Catch-up" hint** — when you're over, shows how long to hold off to get back on pace.
 - **Fully customizable** — colors, thresholds, status icons, reset day/time (down to the minute).
 - **12 languages** — English, Español, 中文, 日本語, हिन्दी, العربية, Français, Русский, Indonesia, Deutsch, Türkçe, 한국어.
+- **Feels native** — Liquid Glass panel with the same translucency as built-in menu bar
+  items, the icon highlights while open, click it again to close, and it never steals focus
+  from the app you're working in.
 - Lives only in the menu bar (no Dock icon), right-click to quit.
+
+<p align="center">
+  <img src="docs/screenshot-settings.png" width="300" alt="ClaudePace settings">
+</p>
 
 ## 🧮 How it works
 
@@ -33,7 +42,7 @@ Claude Desktop app settings.
 
 ## 🛠 Build
 
-Requires Xcode (macOS 13+).
+Requires **macOS 27** or later and Xcode 27.
 
 ```bash
 git clone https://github.com/MyriaMontis/ClaudePace.git
