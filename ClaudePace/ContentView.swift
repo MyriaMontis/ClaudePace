@@ -91,7 +91,6 @@ struct ContentView: View {
             Color.clear.contentShape(Rectangle()).onTapGesture { clearFocus() }
         )
         .onChange(of: showSettings) { _, isOpen in
-            AppDelegate.shared?.setSticky(isOpen)
             if !isOpen { NSColorPanel.shared.close() }
         }
         .onReceive(timer) { now = $0 }
